@@ -540,33 +540,33 @@ const styles = {
     flex: 1
   },
   surahName: {
-    fontSize: '24px',
+    fontSize: '18px',
     fontWeight: '600',
-    marginBottom: '30px',
+    marginBottom: '20px',
     color: '#d4af37',
     textShadow: '0 2px 10px rgba(0,0,0,0.5)',
     direction: 'rtl'
   },
   verseTextArabic: {
-    fontSize: '36px',
+    fontSize: '26px',
     lineHeight: '1.8',
     fontWeight: '600',
-    marginBottom: '30px',
+    marginBottom: '20px',
     textShadow: '0 2px 10px rgba(0,0,0,0.5)',
     direction: 'rtl',
     fontFamily: "'Traditional Arabic', 'Arabic Typesetting', Arial"
   },
   verseTextEnglish: {
-    fontSize: '20px',
+    fontSize: '16px',
     lineHeight: '1.6',
     fontWeight: '400',
-    marginBottom: '30px',
+    marginBottom: '20px',
     textShadow: '0 2px 10px rgba(0,0,0,0.5)',
     opacity: 0.9,
     fontFamily: "'Georgia', serif"
   },
   reference: {
-    fontSize: '18px',
+    fontSize: '15px',
     fontWeight: '600',
     color: '#d4af37',
     textShadow: '0 2px 5px rgba(0,0,0,0.5)'
