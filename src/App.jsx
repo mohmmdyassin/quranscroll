@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Share2, X, BookMarked } from 'lucide-react';
+import { Heart, Share2, X, BookMarked, BarChart3 } from 'lucide-react';
 
 export default function QuranScroll() {
   const [verses, setVerses] = useState([]);
@@ -13,6 +13,9 @@ export default function QuranScroll() {
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef(null);
   const lastScrollTime = useRef(Date.now());
+  const [readingStats, setReadingStats] = useState({});
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const viewedAyahs = useRef(new Set());
 
   // Storage helper functions
   const storage = {
@@ -79,6 +82,7 @@ export default function QuranScroll() {
   // Load liked verses from storage on mount
   useEffect(() => {
     loadLikedVerses();
+    loadReadingStats();
   }, []);
 
   const loadLikedVerses = async () => {
@@ -102,6 +106,68 @@ export default function QuranScroll() {
       }
     } catch (err) {
       console.log('No liked verses yet or error loading:', err);
+    }
+  };
+
+  const loadReadingStats = async () => {
+    try {
+      const result = await storage.get('reading-stats');
+      if (result && result.value) {
+        const stats = JSON.parse(result.value);
+        setReadingStats(stats);
+      }
+    } catch (err) {
+      console.log('No reading stats yet:', err);
+    }
+  };
+
+  const trackAyahView = async (verse) => {
+    const ayahKey = `${verse.surahNumber}:${verse.ayahNumber}`;
+    
+    // Only track if not already viewed in this session
+    if (viewedAyahs.current.has(ayahKey)) {
+      return;
+    }
+    
+    viewedAyahs.current.add(ayahKey);
+    
+    try {
+      const result = await storage.get('reading-stats');
+      let stats = {};
+      
+      if (result && result.value) {
+        stats = JSON.parse(result.value);
+      }
+      
+      const surahKey = `surah_${verse.surahNumber}`;
+      
+      if (!stats[surahKey]) {
+        stats[surahKey] = {
+          surahNumber: verse.surahNumber,
+          surahName: verse.surahName,
+          surahNameArabic: verse.surahNameArabic,
+          ayahsRead: new Set(),
+          totalReads: 0
+        };
+      }
+      
+      // Convert Set to Array for storage
+      const ayahsArray = Array.isArray(stats[surahKey].ayahsRead) 
+        ? stats[surahKey].ayahsRead 
+        : Array.from(stats[surahKey].ayahsRead);
+      
+      if (!ayahsArray.includes(verse.ayahNumber)) {
+        ayahsArray.push(verse.ayahNumber);
+      }
+      
+      stats[surahKey].ayahsRead = ayahsArray;
+      stats[surahKey].totalReads += 1;
+      stats[surahKey].lastRead = new Date().toISOString();
+      
+      await storage.set('reading-stats', JSON.stringify(stats));
+      setReadingStats(stats);
+    } catch (err) {
+      console.error('Error tracking ayah view:', err);
     }
   };
 
@@ -169,6 +235,11 @@ export default function QuranScroll() {
     
     if (newIndex !== currentIndex) {
       setCurrentIndex(newIndex);
+      
+      // Track the ayah view
+      if (verses[newIndex]) {
+        trackAyahView(verses[newIndex]);
+      }
       
       // Load more verses when near the end
       if (newIndex >= verses.length - 2 && !loading) {
@@ -370,6 +441,16 @@ export default function QuranScroll() {
         )}
       </button>
 
+      {/* Floating Stats Button */}
+      <button 
+        style={{...styles.floatingButton, top: '90px'}}
+        onClick={() => setShowStatsModal(true)}
+        className="floating-button"
+      >
+        <BarChart3 size={24} color="white" />
+        {Object.keys(readingStats).length > 0}
+      </button>
+
       {/* Liked Verses Modal */}
       {showLikedModal && (
         <div style={styles.modalOverlay} onClick={() => setShowLikedModal(false)}>
@@ -417,6 +498,77 @@ export default function QuranScroll() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reading Stats Modal */}
+      {showStatsModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowStatsModal(false)}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>
+                <BarChart3 size={28} color="#d4af37" />
+                Reading Progress
+              </h2>
+              <button 
+                style={styles.closeButton}
+                onClick={() => setShowStatsModal(false)}
+                className="close-button"
+                type="button"
+                aria-label="Close"
+              >
+                <X size={24} color="white" strokeWidth={2} />
+              </button>
+            </div>
+            
+            <div style={styles.modalContent}>
+              {Object.keys(readingStats).length === 0 ? (
+                <div style={styles.emptyState}>
+                  <BarChart3 size={64} color="#666" />
+                  <p style={styles.emptyText}>No reading history yet</p>
+                  <p style={styles.emptySubtext}>Start scrolling to track your progress</p>
+                </div>
+              ) : (
+                <div style={styles.likedList}>
+                  {Object.values(readingStats)
+                    .sort((a, b) => b.totalReads - a.totalReads)
+                    .map((stat) => (
+                      <div key={stat.surahNumber} style={styles.statCard} className="liked-card">
+                        <div style={styles.statHeader}>
+                          <div>
+                            <p style={styles.statSurahName}>{stat.surahName}</p>
+                            <p style={styles.statSurahNameArabic}>{stat.surahNameArabic}</p>
+                          </div>
+                          <div style={styles.statBadge}>
+                            Surah {stat.surahNumber}
+                          </div>
+                        </div>
+                        <div style={styles.statDetails}>
+                          <div style={styles.statItem}>
+                            <span style={styles.statLabel}>Unique Ayahs Read</span>
+                            <span style={styles.statValue}>
+                              {Array.isArray(stat.ayahsRead) ? stat.ayahsRead.length : 0}
+                            </span>
+                          </div>
+                          <div style={styles.statItem}>
+                            <span style={styles.statLabel}>Total Views</span>
+                            <span style={styles.statValue}>{stat.totalReads}</span>
+                          </div>
+                          {stat.lastRead && (
+                            <div style={styles.statItem}>
+                              <span style={styles.statLabel}>Last Read</span>
+                              <span style={styles.statValue}>
+                                {new Date(stat.lastRead).toLocaleDateString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
@@ -780,6 +932,60 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     transition: 'background 0.2s'
+  },
+  statCard: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: '12px',
+    padding: '20px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    transition: 'transform 0.2s, background 0.2s'
+  },
+  statHeader: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: '16px',
+    gap: '12px'
+  },
+  statSurahName: {
+    color: 'white',
+    fontSize: '20px',
+    fontWeight: '600',
+    marginBottom: '4px'
+  },
+  statSurahNameArabic: {
+    color: '#d4af37',
+    fontSize: '18px',
+    direction: 'rtl',
+    fontWeight: '600'
+  },
+  statBadge: {
+    background: 'rgba(212, 175, 55, 0.2)',
+    color: '#d4af37',
+    padding: '4px 12px',
+    borderRadius: '12px',
+    fontSize: '12px',
+    fontWeight: '600',
+    whiteSpace: 'nowrap'
+  },
+  statDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+  statItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  statLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: '14px'
+  },
+  statValue: {
+    color: 'white',
+    fontSize: '16px',
+    fontWeight: '600'
   }
 };
 

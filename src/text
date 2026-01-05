@@ -1,0 +1,70 @@
+AyaTok / QuranSwipe – App Explanation
+1️⃣ Core Idea
+
+AyaTok is a Quran reading app that shows one ayah (verse) at a time, in a vertical swipe format like TikTok.
+
+Users swipe up to see the next ayah.
+
+Every ayah the user reads earns points, inspired by the hadith: “Every letter you read from the Quran has 10 rewards.”
+
+Each ayah is only shown once until the user completes the full Quran.
+
+2️⃣ Follow Surah Feature
+
+Every Surah is treated like an influencer.
+
+Users can follow or unfollow specific Surahs.
+
+The main feed shows only ayahs from the Surahs the user follows.
+
+Users start following all Surahs by default, but can customize their feed.
+
+3️⃣ Reading Modes
+
+Main Feed (Randomized)
+
+Shows a new ayah from the followed Surahs each swipe.
+
+Manual Mode (Direct Surah Reading)
+
+User enters a specific Surah and reads it manually.
+
+Every ayah read counts for points and is marked as read, so it won’t appear in the main feed again.
+
+4️⃣ Progress & Stats
+
+Track how many ayahs read per Surah.
+
+See completion percentage for each Surah.
+
+Track total points earned and streaks.
+
+Clicking on any ayah lets the user continue reading from that verse, even outside the main feed.
+
+5️⃣ Audio Feature
+
+Users can listen to recitations of each ayah via AlQuran.cloud API, free and streamed directly from CDN.
+
+Multiple reciters are available (~35+ voices), e.g., Mishary Alafasy, Sudais, Husary.
+
+Users can choose their favorite reciter.
+
+6️⃣ PWA / Installable App
+
+AyaTok is a Progressive Web App (PWA):
+
+Works offline for text + cached audio
+
+Can be installed on Android and iOS like a native app
+
+Includes a real “Download / Install” button inside the app
+
+7️⃣ Gamification & Motivation
+
+Points per ayah → motivates daily reading
+
+Badges and achievements for completing Surahs or full Quran
+
+Daily streaks encourage habit formation
+
+Optional push notifications (for reminders or Ramadan challenges)
